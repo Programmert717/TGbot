@@ -1,12 +1,9 @@
 import os
-from dotenv import load_dotenv
 
+from dotenv import load_dotenv
 load_dotenv()
 
 TOKEN = os.getenv("BOT_TOKEN")
-
-if TOKEN is None:
-    print("Ошибка: Токен не найден в .env файле!")
-else:
-    print("Токен успешно загружен!")
-
+ADMIN_ID = int(os.getenv("ADMIN_ID", 0))
+REMINDER_TIMES = ["08:00", "20:00"]
+MESSAGE_TEXT = "Милая, пора пить таблеточки 💊"

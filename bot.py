@@ -11,7 +11,7 @@ logging.basicConfig(level=logging.INFO)
 bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
 
-MSG = "Любовь моя, пора пить таблеточки 💊"
+MSG = "Милая, пора пить таблеточки 💊"
 reminder_times = ["08:00", "20:00"]
 subscribed_users = set()
 sent_today = {}
