@@ -12,7 +12,7 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
 
 MSG = "Милая, пора пить таблеточки 💊"
-reminder_times = ["20:00"]
+reminder_times = ["8:00", "20:00"]
 subscribed_users = set()
 sent_today = {}
 
