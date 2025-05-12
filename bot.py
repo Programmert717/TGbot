@@ -13,7 +13,7 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
 
 MSG = "Милая, пора пить таблеточки 💊"
-REMINDER_TIMES = ["8:00", "20:00"]
+REMINDER_TIMES = ["11:00", "11:05"]
 TIMEZONE = pytz.timezone('Europe/Moscow')
 subscribed_users = set()
 sent_today = {}
