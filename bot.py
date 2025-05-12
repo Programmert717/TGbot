@@ -5,6 +5,7 @@ from aiogram.filters import CommandStart
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, CallbackQuery
 from config import TOKEN
 from datetime import datetime
+import pytz
 
 logging.basicConfig(level=logging.INFO)
 
@@ -12,7 +13,8 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
 
 MSG = "Милая, пора пить таблеточки 💊"
-reminder_times = ["8:00", "20:00"]
+REMINDER_TIMES = ["8:00", "20:00"]
+TIMEZONE = pytz.timezone('Europe/Moscow')
 subscribed_users = set()
 sent_today = {}
 
@@ -45,11 +47,11 @@ async def handle_stop_button(callback: CallbackQuery):
 
 async def send_reminders():
     while True:
-        now = datetime.now()
+        now = datetime.now(TIMEZONE)
         time_str = now.strftime("%H:%M")
         date_str = now.date().isoformat()
 
-        for target_time in reminder_times:
+        for target_time in REMINDER_TIMES:
             if time_str == target_time and sent_today.get(target_time) != date_str:
                 for user_id in subscribed_users:
                     try:
@@ -57,9 +59,12 @@ async def send_reminders():
                         logging.info(f"Отправлено {user_id} в {time_str}")
                     except Exception as e:
                         logging.error(f"Ошибка при отправке: {e}")
+                        subscribed_users.discard(user_id)
+
                 sent_today[target_time] = date_str
 
         await asyncio.sleep(30)
+
 
 async def main():
     asyncio.create_task(send_reminders())
