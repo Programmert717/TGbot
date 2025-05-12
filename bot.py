@@ -13,7 +13,7 @@ bot = Bot(token=TOKEN)
 dp = Dispatcher(bot=bot)
 
 MSG = "Милая, пора пить таблеточки 💊"
-REMINDER_TIMES = ["11:00", "11:05"]
+REMINDER_TIMES = ["11:15", "11:18"]
 TIMEZONE = pytz.timezone('Europe/Moscow')
 subscribed_users = set()
 sent_today = {}
@@ -23,6 +23,7 @@ keyboard = InlineKeyboardMarkup(inline_keyboard=[
     [InlineKeyboardButton(text="🛑 Стоп", callback_data="stop_reminder")]
 ])
 
+
 @dp.message(CommandStart())
 async def start_handler(message: types.Message):
     await message.answer(
@@ -31,44 +32,57 @@ async def start_handler(message: types.Message):
         reply_markup=keyboard
     )
 
+
 @dp.callback_query(F.data == "start_reminder")
 async def handle_start_button(callback: CallbackQuery):
     user_id = callback.from_user.id
     subscribed_users.add(user_id)
     await callback.answer("Ты подписана на напоминания 💌")
-    await callback.message.edit_text("✅ Напоминания включены.\n\n(Нажми «Стоп», чтобы отключить)", reply_markup=keyboard)
+    await callback.message.edit_text("✅ Напоминания включены.\n\n(Нажми «Стоп», чтобы отключить)",
+                                     reply_markup=keyboard)
+
 
 @dp.callback_query(F.data == "stop_reminder")
 async def handle_stop_button(callback: CallbackQuery):
     user_id = callback.from_user.id
     subscribed_users.discard(user_id)
     await callback.answer("Ты отписалась от напоминаний ❌")
-    await callback.message.edit_text("🛑 Напоминания отключены.\n\n(Нажми «Старт», чтобы включить)", reply_markup=keyboard)
+    await callback.message.edit_text("🛑 Напоминания отключены.\n\n(Нажми «Старт», чтобы включить)",
+                                     reply_markup=keyboard)
+
 
 async def send_reminders():
+    last_checked = datetime.now(TIMEZONE)
+
     while True:
         now = datetime.now(TIMEZONE)
-        time_str = now.strftime("%H:%M")
         date_str = now.date().isoformat()
 
         for target_time in REMINDER_TIMES:
-            if time_str == target_time and sent_today.get(target_time) != date_str:
-                for user_id in subscribed_users:
-                    try:
-                        await bot.send_message(user_id, MSG)
-                        logging.info(f"Отправлено {user_id} в {time_str}")
-                    except Exception as e:
-                        logging.error(f"Ошибка при отправке: {e}")
-                        subscribed_users.discard(user_id)
+            target_hour, target_minute = map(int, target_time.split(":"))
+            target_dt = now.replace(hour=target_hour, minute=target_minute, second=0, microsecond=0)
 
-                sent_today[target_time] = date_str
+            if last_checked < target_dt <= now:
+                key = (target_time, date_str)
+                if not sent_today.get(key):
+                    for user_id in subscribed_users:
+                        try:
+                            await bot.send_message(user_id, MSG)
+                            logging.info(f"Напоминание отправлено {user_id} в {target_time}")
+                        except Exception as e:
+                            logging.error(f"Ошибка при отправке: {e}")
+                            subscribed_users.discard(user_id)
+                    sent_today[key] = True
 
-        await asyncio.sleep(30)
+        last_checked = now
+        await asyncio.sleep(20)
+
 
 
 async def main():
     asyncio.create_task(send_reminders())
     await dp.start_polling(bot)
+
 
 if __name__ == "__main__":
     asyncio.run(main())
